@@ -17,7 +17,7 @@ namespace GraphicsLab3
       float mouseX = 0, mouseY = 0;
       float rotation = 0f;
       Vector2 mousePressedLoc;
-      Mesh figure;
+      Figure figure;
 
       Vector3 cameraPosition;
       Vector3 cameraShift;
@@ -40,10 +40,8 @@ namespace GraphicsLab3
 
          ResetCameraPosition();
 
-         figure = new Mesh();
+         figure = new Figure();
          figure.InitFigure("../../figure.txt");
-
-         Vector3 vec;
 
          float a = AngleBetween(new Vector2(1, 0), new Vector2(1, 1));
 
@@ -94,22 +92,25 @@ namespace GraphicsLab3
          //GL.End();
 
 
-         GL.Color3(1f, 1f, 1f);
-         GL.Begin(BeginMode.Lines);
+         //GL.Color3(1f, 1f, 1f);
+        // GL.Begin(BeginMode.Lines);
 
-         GL.Vertex3(0, 0, 0);
+         //GL.Vertex3(0, 0, 0);
 
-         Vector3 v = new Vector3(0f, 0f, 2f);
+         //Vector3 v = new Vector3(0f, 0f, 2f);
 
-         v = RotateAroundX(v, cameraERotation);
-         v = RotateAroundY(v, -cameraYRotation + MathHelper.DegreesToRadians(90f));
+         //v = RotateAroundX(v, cameraERotation);
+         //v = RotateAroundY(v, -cameraYRotation + MathHelper.DegreesToRadians(90f));
 
-         GL.Vertex3(v);
+         //GL.Vertex3(v);
 
-         GL.End();
+         //GL.End();
 
          GL.Color3(1f, 0f, 0f);
-         figure.Draw();
+         figure.DrawMesh();
+
+         GL.Color3(1f, 1f, 1f);
+         figure.DrawGrid();
 
          SwapBuffers();
       }
