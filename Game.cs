@@ -17,12 +17,15 @@ namespace GraphicsLab3
       float mouseX = 0, mouseY = 0;
       float rotation = 0f;
       Vector2 mousePressedLoc;
-      float loc = 2f;
+      Mesh figure;
 
       Vector3 cameraPosition;
+      Vector3 cameraShift;
       float cameraZoom;
       float cameraYRotation;
       float cameraERotation;
+
+      bool isShiftDown = false;
 
       public Game(int width, int height, string title) :
            base(width, height, GraphicsMode.Default, title)
@@ -35,10 +38,15 @@ namespace GraphicsLab3
          GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
          GL.Enable(EnableCap.DepthTest);
 
-         cameraZoom = 2;
-         cameraPosition = new Vector3(0, 0, cameraZoom);
-         cameraYRotation = 90f * (float)Math.PI / 180f;
-         cameraERotation = 90f * (float)Math.PI / 180f;
+         ResetCameraPosition();
+
+         figure = new Mesh();
+         figure.InitFigure("../../figure.txt");
+
+         Vector3 vec;
+
+         float a = AngleBetween(new Vector2(1, 0), new Vector2(1, 1));
+
          base.OnLoad(e);
       }
 
@@ -56,6 +64,7 @@ namespace GraphicsLab3
       {
          UpdatePhysics();
          Render();
+
          base.OnRenderFrame(e);
       }
 
@@ -69,40 +78,65 @@ namespace GraphicsLab3
       {
          GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-         Matrix4 modelview = Matrix4.LookAt(cameraPosition, Vector3.Zero, Vector3.UnitY);
+         Matrix4 modelview = Matrix4.LookAt(cameraShift + cameraPosition, cameraShift + Vector3.Zero, Vector3.UnitY);
          GL.MatrixMode(MatrixMode.Modelview);
          GL.LoadMatrix(ref modelview);
 
-         GL.Color3(1f, 0f, 0f);
-         DrawCube(Vector3.Zero, 1f);
 
-         GL.Begin(BeginMode.Triangles);
+         //DrawCube(Vector3.Zero, 1f);
 
-         GL.Color3(0f, 1f, 0f); GL.Vertex3(0, 1f, 0f);
-         GL.Color3(1f, 0f, 0f); GL.Vertex3(1f, 0f, 0f);
-         GL.Color3(0f, 0f, 1f); GL.Vertex3(0f, 0f, 0f);
+         //GL.Begin(BeginMode.Triangles);
+
+         //GL.Color3(0f, 1f, 0f); GL.Vertex3(0, 1f, 0f);
+         //GL.Color3(1f, 0f, 0f); GL.Vertex3(1f, 0f, 0f);
+         //GL.Color3(0f, 0f, 1f); GL.Vertex3(0f, 0f, 0f);
+
+         //GL.End();
+
+
+         GL.Color3(1f, 1f, 1f);
+         GL.Begin(BeginMode.Lines);
+
+         GL.Vertex3(0, 0, 0);
+
+         Vector3 v = new Vector3(0f, 0f, 2f);
+
+         v = RotateAroundX(v, cameraERotation);
+         v = RotateAroundY(v, -cameraYRotation + MathHelper.DegreesToRadians(90f));
+
+         GL.Vertex3(v);
 
          GL.End();
+
+         GL.Color3(1f, 0f, 0f);
+         figure.Draw();
 
          SwapBuffers();
       }
 
       protected override void OnKeyDown(KeyboardKeyEventArgs e)
       {
-         if(e.Shift)
+         if (e.Shift)
+            isShiftDown = true;
+
+         switch (e.Key)
          {
-            switch(e.Key)
+            case Key.Slash:
             {
-               
+               ResetCameraPosition();
+               break;
             }
          }
 
-         switch(e.Key)
-         {
-           
-         }
-
          base.OnKeyDown(e);
+      }
+
+      protected override void OnKeyUp(KeyboardKeyEventArgs e)
+      {
+         if (!e.Shift)
+            isShiftDown = false;
+
+         base.OnKeyUp(e);
       }
 
       protected override void OnMouseDown(MouseButtonEventArgs e)
@@ -132,16 +166,30 @@ namespace GraphicsLab3
 
       protected override void OnMouseMove(MouseMoveEventArgs e)
       {
-         if(e.Mouse.IsButtonDown(MouseButton.Middle))
+         if(isShiftDown)
          {
-            cameraYRotation += e.XDelta * 0.01f;
-            cameraERotation -= e.YDelta * 0.01f;
-            RecalcCameraPosition();
-            //cameraPosition.X = cameraZoom * (float)Math.Cos(cameraYRotation);
-            //cameraPosition.Z = cameraZoom * (float)Math.Sin(cameraYRotation);
+            if (e.Mouse.IsButtonDown(MouseButton.Middle))
+            {
+               cameraShift.X -= cameraPosition.Z * e.XDelta * 0.002f;
+               cameraShift.Z -= -cameraPosition.X * e.XDelta * 0.002f;
 
+               Vector3 v1 = new Vector3(0f, 0f, 2f);
 
+               v1 = RotateAroundX(v1, cameraERotation);
+               v1 = RotateAroundY(v1, -cameraYRotation + MathHelper.DegreesToRadians(90f));
+
+               cameraShift.X -= v1.X * e.YDelta * 0.003f;
+               cameraShift.Y -= v1.Y * e.YDelta * 0.003f;
+               cameraShift.Z -= v1.Z * e.YDelta * 0.003f;
+            }
          }
+         else
+            if (e.Mouse.IsButtonDown(MouseButton.Middle))
+            {
+               cameraYRotation += e.XDelta * 0.01f;
+               cameraERotation -= e.YDelta * 0.01f;
+               RecalcCameraPosition();
+            }
 
          mouseX = e.X;
          mouseY = e.Y;
@@ -156,13 +204,57 @@ namespace GraphicsLab3
          cameraPosition.Y = cameraZoom * (float)Math.Cos(cameraERotation);
       }
 
+      private void ResetCameraPosition()
+      {
+         cameraZoom = 4;
+         cameraPosition = new Vector3(0, 0, cameraZoom);
+         cameraShift = Vector3.Zero;
+         cameraYRotation = 90f * (float)Math.PI / 180f;
+         cameraERotation = 90f * (float)Math.PI / 180f;
+      }
+
+      private Vector3 RotateAroundX(Vector3 vec, float angle)
+      {
+         Vector3 res = Vector3.Zero;
+         res.X = vec.X;
+         res.Y = vec.Y * (float)Math.Cos(angle) - vec.Z * (float)Math.Sin(angle);
+         res.Z = vec.Y * (float)Math.Sin(angle) + vec.Z * (float)Math.Cos(angle);
+
+         return res;
+      }
+
+      private Vector3 RotateAroundY(Vector3 vec, float angle)
+      {
+         Vector3 res = Vector3.Zero;
+         res.X = vec.X * (float)Math.Cos(angle) + vec.Z * (float)Math.Sin(angle);
+         res.Y = vec.Y;
+         res.Z = -vec.X * (float)Math.Sin(angle) + vec.Z * (float)Math.Cos(angle);
+
+         return res;
+      }
+
+      private Vector3 RotateAroundZ(Vector3 vec, float angle)
+      {
+         Vector3 res = Vector3.Zero;
+         res.X = vec.X * (float)Math.Cos(angle) - vec.Y * (float)Math.Sin(angle);
+         res.Y = vec.X * (float)Math.Sin(angle) + vec.Y * (float)Math.Cos(angle);
+         res.Z = vec.Z;
+
+         return res;
+      }
+
       protected override void OnMouseWheel(MouseWheelEventArgs e)
       {
-         cameraZoom -= e.Delta * 0.1f;
+         cameraZoom -= e.Delta * 0.2f;
          RecalcCameraPosition();
 
 
          base.OnMouseWheel(e);
+      }
+      
+      private float AngleBetween(Vector2 vec1, Vector2 vec2)
+      {
+         return (float)(Math.Acos(Vector2.Dot(vec1, vec2) / (vec1.Length * vec2.Length)));
       }
 
       private void DrawCube(Vector3 center, float width)
