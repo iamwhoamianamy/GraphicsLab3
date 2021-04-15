@@ -26,6 +26,7 @@ namespace GraphicsLab3
       float cameraERotation;
 
       bool isShiftDown = false;
+      bool isCtrlDown = false;
 
       public Game(int width, int height, string title) :
            base(width, height, GraphicsMode.Default, title)
@@ -80,37 +81,23 @@ namespace GraphicsLab3
          GL.MatrixMode(MatrixMode.Modelview);
          GL.LoadMatrix(ref modelview);
 
-
-         //DrawCube(Vector3.Zero, 1f);
-
-         //GL.Begin(BeginMode.Triangles);
-
-         //GL.Color3(0f, 1f, 0f); GL.Vertex3(0, 1f, 0f);
-         //GL.Color3(1f, 0f, 0f); GL.Vertex3(1f, 0f, 0f);
-         //GL.Color3(0f, 0f, 1f); GL.Vertex3(0f, 0f, 0f);
-
-         //GL.End();
-
-
-         //GL.Color3(1f, 1f, 1f);
-        // GL.Begin(BeginMode.Lines);
-
-         //GL.Vertex3(0, 0, 0);
-
-         //Vector3 v = new Vector3(0f, 0f, 2f);
-
-         //v = RotateAroundX(v, cameraERotation);
-         //v = RotateAroundY(v, -cameraYRotation + MathHelper.DegreesToRadians(90f));
-
-         //GL.Vertex3(v);
-
-         //GL.End();
-
          GL.Color3(1f, 0f, 0f);
          figure.DrawMesh();
 
          GL.Color3(1f, 1f, 1f);
          figure.DrawGrid();
+
+         //Vector3 v0 = new Vector3(0f, 0f, 2f);
+         //v0 = RotateAroundY(v0, -cameraYRotation);
+
+         //GL.Color3(0f, 1f, 0f);
+
+         //GL.Begin(BeginMode.Lines);
+
+         //GL.Vertex3(0f, 0f, 0f);
+         //GL.Vertex3(v0);
+
+         //GL.End();
 
          SwapBuffers();
       }
@@ -119,6 +106,9 @@ namespace GraphicsLab3
       {
          if (e.Shift)
             isShiftDown = true;
+
+         if (e.Control)
+            isCtrlDown = true;
 
          switch (e.Key)
          {
@@ -136,6 +126,8 @@ namespace GraphicsLab3
       {
          if (!e.Shift)
             isShiftDown = false;
+         if (!e.Control)
+            isCtrlDown = false;
 
          base.OnKeyUp(e);
       }
@@ -171,26 +163,39 @@ namespace GraphicsLab3
          {
             if (e.Mouse.IsButtonDown(MouseButton.Middle))
             {
-               cameraShift.X -= cameraPosition.Z * e.XDelta * 0.002f;
-               cameraShift.Z -= -cameraPosition.X * e.XDelta * 0.002f;
+
+               Vector3 v0 = new Vector3(0f, 0f, 2f);
+               v0 = RotateAroundY(v0, -cameraYRotation);
+
+               cameraShift.X += v0.X * e.XDelta * 0.005f;
+               cameraShift.Z += v0.Z * e.XDelta * 0.005f;
 
                Vector3 v1 = new Vector3(0f, 0f, 2f);
 
                v1 = RotateAroundX(v1, cameraERotation);
                v1 = RotateAroundY(v1, -cameraYRotation + MathHelper.DegreesToRadians(90f));
 
-               cameraShift.X -= v1.X * e.YDelta * 0.003f;
-               cameraShift.Y -= v1.Y * e.YDelta * 0.003f;
-               cameraShift.Z -= v1.Z * e.YDelta * 0.003f;
+               cameraShift.X -= v1.X * e.YDelta * 0.005f;
+               cameraShift.Y -= v1.Y * e.YDelta * 0.005f;
+               cameraShift.Z -= v1.Z * e.YDelta * 0.005f;
             }
          }
-         else
+         else if(isCtrlDown)
+         {
             if (e.Mouse.IsButtonDown(MouseButton.Middle))
             {
-               cameraYRotation += e.XDelta * 0.01f;
-               cameraERotation -= e.YDelta * 0.01f;
+               cameraZoom += e.YDelta * 0.02f;
                RecalcCameraPosition();
             }
+         }
+         else if (e.Mouse.IsButtonDown(MouseButton.Middle))
+         {
+            cameraYRotation += e.XDelta * 0.01f;
+            cameraERotation -= e.YDelta * 0.01f;
+            RecalcCameraPosition();
+         }
+         
+
 
          mouseX = e.X;
          mouseY = e.Y;
