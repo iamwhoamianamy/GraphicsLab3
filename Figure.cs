@@ -22,6 +22,7 @@ namespace GraphicsLab3
 
       int replicCount = 0;
       Vector3[] trajectory;
+      Vector3 initialPoint;
 
       public Figure()
       {
@@ -30,14 +31,12 @@ namespace GraphicsLab3
 
       public void InitFigure(string fileName)
       {
-         Vector3 pos;
-
          using (StreamReader sr = new StreamReader(fileName))
          {
             string l = sr.ReadLine();
             string[] parameters = l.Split(' ');
 
-            pos = new Vector3(float.Parse(parameters[0]), float.Parse(parameters[1]), float.Parse(parameters[2]));
+            initialPoint = new Vector3(float.Parse(parameters[0]), float.Parse(parameters[1]), float.Parse(parameters[2]));
 
             l = sr.ReadLine();
             parameters = l.Split(' ');
@@ -58,7 +57,7 @@ namespace GraphicsLab3
             }
          }
 
-         Vector3[] polygon = CreatePolygon(pos, radius, polygonBase);
+         Vector3[] polygon = CreatePolygon(initialPoint, radius, polygonBase);
 
          int start;
          if (polygonBase == 3 || polygonBase == 4)
@@ -73,7 +72,7 @@ namespace GraphicsLab3
 
          if (polygonBase != 3 && polygonBase != 4)
          {
-            vertices[0] = pos;
+            vertices[0] = initialPoint;
             vertices[vertices.Length - 1] = trajectory[trajectory.Length - 1];
          }
 
@@ -126,6 +125,7 @@ namespace GraphicsLab3
 
       public void DrawGrid()
       {
+         //GL.LineWidth(10f);
          GL.Begin(BeginMode.Lines);
 
          for (int i = 0; i < faces.Length; i++)
@@ -156,6 +156,36 @@ namespace GraphicsLab3
          for (int i = 0; i < replicCount; i++)
          {
             Vector3[] polygon = CreatePolygon(trajectory[i], radius, polygonBase);
+
+            if (i < replicCount - 1)
+            {
+               Vector3 prevVec = Vector3.Zero;
+               Vector3 nextVec = Vector3.Zero;
+
+               if (i == 0)
+               {
+                  prevVec = initialPoint - trajectory[i];
+                  nextVec = trajectory[i + 1] - trajectory[i];
+               }
+               else
+               {
+                  prevVec = trajectory[i - 1] - trajectory[i];
+                  nextVec = trajectory[i + 1] - trajectory[i];
+               }
+
+               Vector2 v1 = new Vector2(prevVec.Z, prevVec.Y);
+               Vector2 v2 = new Vector2(nextVec.Z, nextVec.Y);
+               float angle = MathHelper.PiOver2 - Help.AngleBetween(v1, v2) / 2;
+               // * (float)Math.Sign(Vector2.PerpDot(v1, v2))
+
+               for (int j = 0; j < polygon.Length; j++)
+               {
+                  polygon[j] -= trajectory[i];
+                  polygon[j] = Help.RotateAroundX(polygon[j], angle);
+                  polygon[j] += trajectory[i];
+               }
+            }
+
 
             for (int j = 0; j < polygonBase; j++)
             {

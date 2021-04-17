@@ -44,8 +44,6 @@ namespace GraphicsLab3
          figure = new Figure();
          figure.InitFigure("../../figure.txt");
 
-         float a = AngleBetween(new Vector2(1, 0), new Vector2(1, 1));
-
          base.OnLoad(e);
       }
 
@@ -165,15 +163,15 @@ namespace GraphicsLab3
             {
 
                Vector3 v0 = new Vector3(0f, 0f, 2f);
-               v0 = RotateAroundY(v0, -cameraYRotation);
+               v0 = Help.RotateAroundY(v0, -cameraYRotation);
 
                cameraShift.X += v0.X * e.XDelta * 0.005f;
                cameraShift.Z += v0.Z * e.XDelta * 0.005f;
 
                Vector3 v1 = new Vector3(0f, 0f, 2f);
 
-               v1 = RotateAroundX(v1, cameraERotation);
-               v1 = RotateAroundY(v1, -cameraYRotation + MathHelper.DegreesToRadians(90f));
+               v1 = Help.RotateAroundX(v1, cameraERotation);
+               v1 = Help.RotateAroundY(v1, -cameraYRotation + MathHelper.DegreesToRadians(90f));
 
                cameraShift.X -= v1.X * e.YDelta * 0.005f;
                cameraShift.Y -= v1.Y * e.YDelta * 0.005f;
@@ -219,35 +217,7 @@ namespace GraphicsLab3
          cameraERotation = 90f * (float)Math.PI / 180f;
       }
 
-      private Vector3 RotateAroundX(Vector3 vec, float angle)
-      {
-         Vector3 res = Vector3.Zero;
-         res.X = vec.X;
-         res.Y = vec.Y * (float)Math.Cos(angle) - vec.Z * (float)Math.Sin(angle);
-         res.Z = vec.Y * (float)Math.Sin(angle) + vec.Z * (float)Math.Cos(angle);
-
-         return res;
-      }
-
-      private Vector3 RotateAroundY(Vector3 vec, float angle)
-      {
-         Vector3 res = Vector3.Zero;
-         res.X = vec.X * (float)Math.Cos(angle) + vec.Z * (float)Math.Sin(angle);
-         res.Y = vec.Y;
-         res.Z = -vec.X * (float)Math.Sin(angle) + vec.Z * (float)Math.Cos(angle);
-
-         return res;
-      }
-
-      private Vector3 RotateAroundZ(Vector3 vec, float angle)
-      {
-         Vector3 res = Vector3.Zero;
-         res.X = vec.X * (float)Math.Cos(angle) - vec.Y * (float)Math.Sin(angle);
-         res.Y = vec.X * (float)Math.Sin(angle) + vec.Y * (float)Math.Cos(angle);
-         res.Z = vec.Z;
-
-         return res;
-      }
+      
 
       protected override void OnMouseWheel(MouseWheelEventArgs e)
       {
@@ -258,10 +228,7 @@ namespace GraphicsLab3
          base.OnMouseWheel(e);
       }
       
-      private float AngleBetween(Vector2 vec1, Vector2 vec2)
-      {
-         return (float)(Math.Acos(Vector2.Dot(vec1, vec2) / (vec1.Length * vec2.Length)));
-      }
+
 
       private void DrawCube(Vector3 center, float width)
       {

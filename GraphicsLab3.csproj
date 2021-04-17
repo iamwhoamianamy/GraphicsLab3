@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Game.cs" />
     <Compile Include="Figure.cs" />
+    <Compile Include="Help.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
