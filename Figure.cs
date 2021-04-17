@@ -125,7 +125,6 @@ namespace GraphicsLab3
 
       public void DrawGrid()
       {
-         //GL.LineWidth(10f);
          GL.Begin(BeginMode.Lines);
 
          for (int i = 0; i < faces.Length; i++)
@@ -176,13 +175,23 @@ namespace GraphicsLab3
                Vector2 v1 = new Vector2(prevVec.Z, prevVec.Y);
                Vector2 v2 = new Vector2(nextVec.Z, nextVec.Y);
                float angle = MathHelper.PiOver2 - Help.AngleBetween(v1, v2) / 2;
-               // * (float)Math.Sign(Vector2.PerpDot(v1, v2))
 
-               for (int j = 0; j < polygon.Length; j++)
+               float ang = MathHelper.RadiansToDegrees(angle);
+
+               if (float.IsNaN(angle))
+                  angle = MathHelper.PiOver4;
+               else if (angle == MathHelper.PiOver4 && v1.Y == v2.Y)
+                  angle = 0;
+                  
+
+               if (angle != 0)
                {
-                  polygon[j] -= trajectory[i];
-                  polygon[j] = Help.RotateAroundX(polygon[j], angle);
-                  polygon[j] += trajectory[i];
+                  for (int j = 0; j < polygon.Length; j++)
+                  {
+                     polygon[j] -= trajectory[i];
+                     polygon[j] = Help.RotateAroundX(polygon[j], angle * (v1.Y >= v2.Y ? 1 : -1));
+                     polygon[j] += trajectory[i];
+                  }
                }
             }
 

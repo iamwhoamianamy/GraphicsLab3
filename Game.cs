@@ -83,6 +83,7 @@ namespace GraphicsLab3
          figure.DrawMesh();
 
          GL.Color3(1f, 1f, 1f);
+         GL.LineWidth(3f);
          figure.DrawGrid();
 
          //Vector3 v0 = new Vector3(0f, 0f, 2f);
@@ -211,9 +212,9 @@ namespace GraphicsLab3
       private void ResetCameraPosition()
       {
          cameraZoom = 4;
-         cameraPosition = new Vector3(0, 0, cameraZoom);
+         cameraPosition = new Vector3(0, 0, -cameraZoom);
          cameraShift = Vector3.Zero;
-         cameraYRotation = 90f * (float)Math.PI / 180f;
+         cameraYRotation = -90f * (float)Math.PI / 180f;
          cameraERotation = 90f * (float)Math.PI / 180f;
       }
 

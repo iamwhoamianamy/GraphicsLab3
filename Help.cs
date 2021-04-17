@@ -15,8 +15,9 @@ namespace GraphicsLab3
    {
       public static float AngleBetween(Vector2 vec1, Vector2 vec2)
       {
-         double d = Vector2.Dot(vec1, vec2) / (vec1.Length * vec2.Length);
-         return (float)(Math.Acos(d));
+         //int sign = Math.Sign(Vector2.PerpDot(vec1, vec2)) * -1;
+         //double dInDeg = MathHelper.RadiansToDegrees(d);
+         return (float)Math.Acos(Vector2.Dot(vec1, vec2) / (vec1.Length * vec2.Length));
       }
 
       public static Vector3 RotateAroundX(Vector3 vec, float angle)
