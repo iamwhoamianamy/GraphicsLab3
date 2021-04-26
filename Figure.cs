@@ -111,9 +111,7 @@ namespace GraphicsLab3
             }
 
             for (int j = 0; j < polygonBase; j++)
-            {
                sideVertices[i][j] = polygon[j];
-            }
          }
 
          int faceStart = 0;
@@ -130,7 +128,7 @@ namespace GraphicsLab3
 
                v1 = new Tuple<int, int>(i, (j + 1) % polygonBase);
 
-               sideFaces[faceStart++] = new Face(v0, v1, v2);
+               sideFaces[faceStart++] = new Face(v1, v0, v2);
             }
          }
       }
@@ -236,7 +234,7 @@ namespace GraphicsLab3
 
                v1 = new Tuple<int, int>(i, (j + 1) % (polygonBase + 1));
 
-               textureFaces[faceStart++] = new Face(v0, v1, v2);
+               textureFaces[faceStart++] = new Face(v1, v0, v2);
             }
          }
       }

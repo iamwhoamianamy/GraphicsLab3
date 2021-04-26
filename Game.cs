@@ -102,12 +102,23 @@ namespace GraphicsLab3
             GL.LoadMatrix(ref modelview);
          }
 
+         GL.Enable(EnableCap.Lighting);
+         GL.Enable(EnableCap.Light0);
 
-         figure.DrawTexture();
 
-         //GL.Color3(1f, 0f, 0f);
-         //figure.DrawMesh();
+         float[] lightPos = { 2, 0, 1, 1 };
+         float[] material = { 0, 0, 0.9f, 1 };
 
+
+         GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
+         GL.Light(LightName.Light0, LightParameter.Position, lightPos);
+
+         GL.Material(MaterialFace.Front, MaterialParameter.AmbientAndDiffuse, material);
+         GL.Enable(EnableCap.ColorMaterial);
+
+         //figure.DrawTexture();
+         GL.Color3(1f, 0f, 0f);
+         figure.DrawMesh();
 
          if (doDrawGrid)
          {
@@ -115,17 +126,8 @@ namespace GraphicsLab3
             GL.LineWidth(3f);
             figure.DrawGrid();
          }
-         //Vector3 v0 = new Vector3(0f, 0f, 2f);
-         //v0 = RotateAroundY(v0, -cameraYRotation);
 
-         //GL.Color3(0f, 1f, 0f);
-
-         //GL.Begin(BeginMode.Lines);
-
-         //GL.Vertex3(0f, 0f, 0f);
-         //GL.Vertex3(v0);
-
-         //GL.End();
+         DrawCube(new Vector3(lightPos[0], lightPos[1], lightPos[2]), 0.5f);
 
          SwapBuffers();
       }
