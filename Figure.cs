@@ -17,22 +17,22 @@ namespace GraphicsLab3
 {
    class Figure
    {
-      public Vector3[] vertices;
-      public Face[] faces;
+      public Vector3[] sideVertices;
+      public Vector2[][] textureCoords;
+      public Face[] sideFaces;
       public int polygonBase = 0;
       public float radius;
 
-      public int replicCount = 0;
+      public int divisions = 0;
       public Vector3[] trajectory;
       public Vector3 initialPoint;
 
       Bitmap bitmap;
-      int[][] data;
       int textureID;
 
       public Figure()
       {
-         vertices = new Vector3[0];
+         sideVertices = new Vector3[0];
       }
 
       public void InitFigure(string fileName)
@@ -42,19 +42,14 @@ namespace GraphicsLab3
             string l = sr.ReadLine();
             string[] parameters = l.Split(' ');
 
-            initialPoint = new Vector3(float.Parse(parameters[0]), float.Parse(parameters[1]), float.Parse(parameters[2]));
-
-            l = sr.ReadLine();
-            parameters = l.Split(' ');
-
             polygonBase = int.Parse(parameters[0]);
             radius = int.Parse(parameters[1]);
 
             l = sr.ReadLine();
-            replicCount = int.Parse(l);
-            trajectory = new Vector3[replicCount];
+            divisions = int.Parse(l);
+            trajectory = new Vector3[divisions];
 
-            for (int i = 0; i < replicCount; i++)
+            for (int i = 0; i < divisions; i++)
             {
                l = sr.ReadLine();
                parameters = l.Split(' ');
@@ -63,54 +58,19 @@ namespace GraphicsLab3
             }
          }
 
-         Vector3[] polygon = CreatePolygon(initialPoint, radius, polygonBase);
+         sideVertices = new Vector3[polygonBase * divisions];
 
-         int start;
-         if (polygonBase == 3 || polygonBase == 4)
-            start = 0;
-         else
-            start = 1;
-
-         vertices = new Vector3[polygonBase * (replicCount + 1) + start * 2];
-
-         for (int i = 0; i < polygonBase; i++)
-            vertices[i + start] = polygon[i];
-
-         if (polygonBase != 3 && polygonBase != 4)
+         sideFaces = new Face[2 * polygonBase * (divisions - 1)];
+         for (int i = 1; i < polygonBase + 1; i++)
          {
-            vertices[0] = initialPoint;
-            vertices[vertices.Length - 1] = trajectory[trajectory.Length - 1];
+            int nextV = (i + 1) % (polygonBase + 1);
+            if (nextV == 0)
+               nextV++;
          }
 
-         switch (polygonBase)
-         {
-            case 3:
-            {
-               faces = new Face[2 + replicCount * 6];
-               faces[0] = new Face(0, 1, 2);
-               break;
-            }
-            case 4:
-            {
-               faces = new Face[4 + replicCount * 8];
-               faces[0] = new Face(0, 1, 2);
-               faces[1] = new Face(2, 3, 0);
-               break;
-            }
-            default:
-            {
-               faces = new Face[2 * polygonBase * (1 + replicCount)];
-               for (int i = 1; i < polygonBase + 1; i++)
-               {
-                  int nextV = (i + 1) % (polygonBase + 1);
-                  if (nextV == 0)
-                     nextV++;
-
-                  faces[i - 1] = new Face(0, i, nextV);
-               }
-               break;
-            }
-         }
+         Vector3[] polygon = CreatePolygon(trajectory[0], radius, polygonBase);
+         for (int j = 0; j < polygonBase; j++)
+            sideVertices[j] = polygon[j];
 
          Replication();
       }
@@ -119,11 +79,11 @@ namespace GraphicsLab3
       {
          GL.Begin(BeginMode.Triangles);
 
-         for (int i = 0; i < faces.Length; i++)
+         for (int i = 0; i < sideFaces.Length; i++)
          {
-            GL.Vertex3(vertices[faces[i].v0]);
-            GL.Vertex3(vertices[faces[i].v1]);
-            GL.Vertex3(vertices[faces[i].v2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v0]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2]);
          }
 
          GL.End();
@@ -133,50 +93,34 @@ namespace GraphicsLab3
       {
          GL.Begin(BeginMode.Lines);
 
-         for (int i = 0; i < faces.Length; i++)
+         for (int i = 0; i < sideFaces.Length; i++)
          {
-            GL.Vertex3(vertices[faces[i].v0]);
-            GL.Vertex3(vertices[faces[i].v1]);
+            GL.Vertex3(sideVertices[sideFaces[i].v0]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1]);
 
-            GL.Vertex3(vertices[faces[i].v0]);
-            GL.Vertex3(vertices[faces[i].v2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v0]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2]);
 
-            GL.Vertex3(vertices[faces[i].v1]);
-            GL.Vertex3(vertices[faces[i].v2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2]);
          }
          GL.End();
       }
 
       public void Replication()
       {
-         int start;
-
-         if (polygonBase == 3 || polygonBase == 4)
-            start = 0;
-         else
-            start = 1;
-
-         int faceStart;
-
-         for (int i = 0; i < replicCount; i++)
+         for (int i = 1; i < divisions; i++)
          {
             Vector3[] polygon = CreatePolygon(trajectory[i], radius, polygonBase);
 
-            if (i < replicCount - 1)
+            if (i > 0 && i < divisions - 1)
             {
+
                Vector3 prevVec = Vector3.Zero;
                Vector3 nextVec = Vector3.Zero;
 
-               if (i == 0)
-               {
-                  prevVec = initialPoint - trajectory[i];
-                  nextVec = trajectory[i + 1] - trajectory[i];
-               }
-               else
-               {
-                  prevVec = trajectory[i - 1] - trajectory[i];
-                  nextVec = trajectory[i + 1] - trajectory[i];
-               }
+               prevVec = trajectory[i - 1] - trajectory[i];
+               nextVec = trajectory[i + 1] - trajectory[i];
 
                Vector2 v1 = new Vector2(prevVec.Z, prevVec.Y);
                Vector2 v2 = new Vector2(nextVec.Z, nextVec.Y);
@@ -188,7 +132,6 @@ namespace GraphicsLab3
                   angle = MathHelper.PiOver4;
                else if (angle == MathHelper.PiOver4 && v1.Y == v2.Y)
                   angle = 0;
-                  
 
                if (angle != 0)
                {
@@ -201,65 +144,32 @@ namespace GraphicsLab3
                }
             }
 
-
             for (int j = 0; j < polygonBase; j++)
             {
-               vertices[start + polygonBase * (i + 1) + j] = polygon[j];
+               sideVertices[polygonBase * i + j] = polygon[j];
             }
          }
 
-         if (polygonBase == 3)
-            faceStart = 1;
-         else if (polygonBase == 4)
-            faceStart = 2;
-         else
-            faceStart = polygonBase;
+         int faceStart = 0;
 
-         for (int i = 0; i < replicCount; i++)
+         for (int i = 0; i < divisions - 1; i++)
          {
             for (int j = 0; j < polygonBase; j++)
             {
-               int v0 = start + j + i * polygonBase;
-               int v1 = start + polygonBase + j + i * polygonBase;
-               int v2 = start + polygonBase + ((j + 1) % polygonBase) + i * polygonBase;
+               int v0 = j + i * polygonBase;
+               int v1 = polygonBase + j + i * polygonBase;
+               int v2 = polygonBase + ((j + 1) % polygonBase) + i * polygonBase;
 
-               faces[faceStart++] = new Face(v0, v1, v2);
+               sideFaces[faceStart++] = new Face(v0, v1, v2);
 
-               v1 = start + ((j + 1) % polygonBase) + i * polygonBase;
+               v1 = ((j + 1) % polygonBase) + i * polygonBase;
 
-               faces[faceStart++] = new Face(v0, v1, v2);
+               sideFaces[faceStart++] = new Face(v0, v1, v2);
             }
-         }
-
-         switch (polygonBase)
-         {
-            case 3:
-            {
-               faces[faces.Length - 1] = new Face(vertices.Length - 3, vertices.Length - 2, vertices.Length - 1);
-               break;
-            }
-            case 4:
-            {
-               faces[faces.Length - 2] = new Face(vertices.Length - 1, vertices.Length - 2, vertices.Length - 3);
-               faces[faces.Length - 1] = new Face(vertices.Length - 1, vertices.Length - 4, vertices.Length - 3);
-               break;
-            }
-            default:
-            {
-               int startVert = start + polygonBase * trajectory.Length;
-
-               for (int i = 0; i < polygonBase; i++)
-               {
-                  int next = (i + 1) % (polygonBase);
-                  faces[faces.Length - polygonBase + i] = new Face(vertices.Length - 1, startVert + i, startVert + next);
-               }
-               break;
-            }
-         }
-
+         }      
       }
 
-      public void DrawTexture()
+      public void BindTexture()
       {
          GL.GenTextures(1, out textureID);
 
@@ -279,25 +189,104 @@ namespace GraphicsLab3
          GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
          GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
          GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+      }
 
+      public void CalcTextureCoords()
+      {
+         textureCoords = new Vector2[divisions][];
+
+         for (int i = 0; i < divisions; i++)
+            textureCoords[i] = new Vector2[polygonBase];
+
+         int start;
+
+         if (polygonBase == 3 || polygonBase == 4)
+            start = 0;
+         else
+            start = 1;
+
+         float[] lengthes = new float[polygonBase];
+
+         for (int i = 0; i < polygonBase; i++)
+         {
+            for (int j = 0; j < divisions; j++)
+            {
+
+            }
+         }
+
+
+         for (int i = 0; i < divisions; i++)
+         {
+            for (int j = 0; j < polygonBase; j++)
+            {
+               int v0 = start + j + i * polygonBase;
+               int v1 = start + polygonBase + j + i * polygonBase;
+               int v2 = start + polygonBase + ((j + 1) % polygonBase) + i * polygonBase;
+               
+               v1 = start + ((j + 1) % polygonBase) + i * polygonBase;
+
+            }
+         }
+
+
+      }
+      public void DrawTexture()
+      {
          GL.BindTexture(TextureTarget.Texture2D, textureID);
+
+         int faceStart;
+
+         if (polygonBase == 3)
+            faceStart = 1;
+         else if (polygonBase == 4)
+            faceStart = 2;
+         else
+            faceStart = polygonBase;
 
          GL.Enable(EnableCap.Texture2D);
          GL.Begin(BeginMode.Triangles);
 
-         for (int i = 0; i < faces.Length; i++)
+         for (int i = 0; i < divisions - 1; i++)
          {
-            GL.TexCoord2(0, 0);
-            GL.Vertex3(vertices[faces[i].v0]);
-            GL.TexCoord2(0, 1);
-            GL.Vertex3(vertices[faces[i].v1]);
-            GL.TexCoord2(1, 0);
-            GL.Vertex3(vertices[faces[i].v2]);
+            for (int j = 0; j < polygonBase; j++)
+            {
+               GL.TexCoord2(textureCoords[i][j]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart].v0]);
+
+               GL.TexCoord2(textureCoords[i + 1][j]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart].v1]);
+
+               GL.TexCoord2(textureCoords[i + 1][(j + 1) % polygonBase]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart++].v2]);
+
+               GL.TexCoord2(textureCoords[i][j]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart].v0]);
+
+               GL.TexCoord2(textureCoords[i][(j + 1) % polygonBase]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart].v1]);
+
+               GL.TexCoord2(textureCoords[i + 1][(j + 1) % polygonBase]);
+               GL.Vertex3(sideVertices[sideFaces[faceStart++].v2]);
+            }
          }
 
          GL.End();
-         GL.Disable(EnableCap.Texture2D);
 
+         //GL.Begin(BeginMode.Triangles);
+
+         //for (int i = 0; i < faces.Length; i++)
+         //{
+         //   GL.TexCoord2(0, 0);
+         //   GL.Vertex3(vertices[faces[i].v0]);
+         //   GL.TexCoord2(0, 1);
+         //   GL.Vertex3(vertices[faces[i].v1]);
+         //   GL.TexCoord2(1, 0);
+         //   GL.Vertex3(vertices[faces[i].v2]);
+         //}
+
+         //GL.End();
+         GL.Disable(EnableCap.Texture2D);
       }
 
       public void ReadTexture(string fileName)

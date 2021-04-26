@@ -47,6 +47,8 @@ namespace GraphicsLab3
          figure.InitFigure("../../figure.txt");
 
          figure.ReadTexture("../../BigFloppa.png");
+         figure.BindTexture();
+         figure.CalcTextureCoords();
 
          base.OnLoad(e);
       }
@@ -100,14 +102,14 @@ namespace GraphicsLab3
          }
 
 
-         figure.DrawTexture();
+         //figure.DrawTexture();
 
-         //GL.Color3(1f, 0f, 0f);
-         //figure.DrawMesh();
+         GL.Color3(1f, 0f, 0f);
+         figure.DrawMesh();
 
-         //GL.Color3(1f, 1f, 1f);
-         //GL.LineWidth(3f);
-         //figure.DrawGrid();
+         GL.Color3(1f, 1f, 1f);
+         GL.LineWidth(3f);
+         figure.DrawGrid();
 
          //Vector3 v0 = new Vector3(0f, 0f, 2f);
          //v0 = RotateAroundY(v0, -cameraYRotation);
