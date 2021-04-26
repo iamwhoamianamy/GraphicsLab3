@@ -10,7 +10,7 @@ namespace GraphicsLab3
    {
       public static void Main()
       {
-         using (Game game = new Game(800, 800, "LearnOpenTK"))
+         using (Game game = new Game(800, 800, "Geometric floppa"))
          {
 
             game.Run(60.0);

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,15 +17,18 @@ namespace GraphicsLab3
 {
    class Figure
    {
-      
       public Vector3[] vertices;
       public Face[] faces;
-      int polygonBase = 0;
-      float radius;
+      public int polygonBase = 0;
+      public float radius;
 
-      int replicCount = 0;
-      Vector3[] trajectory;
-      Vector3 initialPoint;
+      public int replicCount = 0;
+      public Vector3[] trajectory;
+      public Vector3 initialPoint;
+
+      Bitmap bitmap;
+      int[][] data;
+      int textureID;
 
       public Figure()
       {
@@ -251,6 +257,71 @@ namespace GraphicsLab3
             }
          }
 
+      }
+
+      public void DrawTexture()
+      {
+         GL.GenTextures(1, out textureID);
+
+         GL.BindTexture(TextureTarget.Texture2D, textureID);
+
+         BitmapData data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
+           ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
+             OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+
+         bitmap.UnlockBits(data);
+
+         //GL.TexEnv(TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, 6);
+
+         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
+         GL.BindTexture(TextureTarget.Texture2D, textureID);
+
+         GL.Enable(EnableCap.Texture2D);
+         GL.Begin(BeginMode.Triangles);
+
+         for (int i = 0; i < faces.Length; i++)
+         {
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(vertices[faces[i].v0]);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(vertices[faces[i].v1]);
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(vertices[faces[i].v2]);
+         }
+
+         GL.End();
+         GL.Disable(EnableCap.Texture2D);
+
+      }
+
+      public void ReadTexture(string fileName)
+      {
+         bitmap = new Bitmap(fileName);
+
+         //data = new int[bitmap.Height][];
+
+         //for (int i = 0; i < bitmap.Height; i++)
+         //   data[i] = new int[bitmap.Width];
+
+
+         //for (int i = 0; i < bitmap.Height; i++)
+         //{
+         //   for (int j = 0; j < bitmap.Width; j++)
+         //   {
+         //      byte r = bitmap.GetPixel(j, i).R;
+         //      byte g = bitmap.GetPixel(j, i).G;
+         //      byte b = bitmap.GetPixel(j, i).B;
+         //      byte a = bitmap.GetPixel(j, i).A;
+
+         //      data[i][j] = r << 24 | g << 16 | b << 8 | a;
+         //   }
+         //}
       }
 
       public Vector3[] CreatePolygon(Vector3 pos, float radius, int polygonBase)

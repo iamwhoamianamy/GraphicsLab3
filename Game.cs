@@ -28,6 +28,8 @@ namespace GraphicsLab3
       bool isShiftDown = false;
       bool isCtrlDown = false;
 
+      bool isOrthographic = false;
+
       public Game(int width, int height, string title) :
            base(width, height, GraphicsMode.Default, title)
       {
@@ -43,6 +45,8 @@ namespace GraphicsLab3
 
          figure = new Figure();
          figure.InitFigure("../../figure.txt");
+
+         figure.ReadTexture("../../BigFloppa.png");
 
          base.OnLoad(e);
       }
@@ -75,16 +79,35 @@ namespace GraphicsLab3
       {
          GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-         Matrix4 modelview = Matrix4.LookAt(cameraShift + cameraPosition, cameraShift + Vector3.Zero, Vector3.UnitY);
-         GL.MatrixMode(MatrixMode.Modelview);
-         GL.LoadMatrix(ref modelview);
+         //if(isOrthographic)
+         //{
+         //   Matrix4 modelview = Matrix4.CreateOrthographicOffCenter(1f, -1f, -1f, 1f, -10f, 10f);
+         //   GL.MatrixMode(MatrixMode.Modelview);
+         //   GL.LoadMatrix(ref modelview);
+         //   GL.Rotate(180, 0, 1f, 0);
+         //   GL.Translate(0, 0, -11);
 
-         GL.Color3(1f, 0f, 0f);
-         figure.DrawMesh();
+         //   GL.Translate(cameraShift + cameraPosition);
+         //   GL.Scale(0.5f, 0.5f, 0.5f);
 
-         GL.Color3(1f, 1f, 1f);
-         GL.LineWidth(3f);
-         figure.DrawGrid();
+         //   //GL.Translate(cameraShift + cameraPosition);
+         //}
+         //else
+         {
+            Matrix4 modelview = Matrix4.LookAt(cameraShift + cameraPosition, cameraShift + Vector3.Zero, Vector3.UnitY);
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.LoadMatrix(ref modelview);
+         }
+
+
+         figure.DrawTexture();
+
+         //GL.Color3(1f, 0f, 0f);
+         //figure.DrawMesh();
+
+         //GL.Color3(1f, 1f, 1f);
+         //GL.LineWidth(3f);
+         //figure.DrawGrid();
 
          //Vector3 v0 = new Vector3(0f, 0f, 2f);
          //v0 = RotateAroundY(v0, -cameraYRotation);
@@ -114,6 +137,11 @@ namespace GraphicsLab3
             case Key.Slash:
             {
                ResetCameraPosition();
+               break;
+            }
+            case Key.Keypad5:
+            {
+               isOrthographic = !isOrthographic;
                break;
             }
          }
@@ -194,8 +222,6 @@ namespace GraphicsLab3
             RecalcCameraPosition();
          }
          
-
-
          mouseX = e.X;
          mouseY = e.Y;
 
@@ -218,8 +244,6 @@ namespace GraphicsLab3
          cameraERotation = 90f * (float)Math.PI / 180f;
       }
 
-      
-
       protected override void OnMouseWheel(MouseWheelEventArgs e)
       {
          cameraZoom -= e.Delta * 0.2f;
@@ -229,8 +253,6 @@ namespace GraphicsLab3
          base.OnMouseWheel(e);
       }
       
-
-
       private void DrawCube(Vector3 center, float width)
       {
          GL.Begin(BeginMode.Quads);
