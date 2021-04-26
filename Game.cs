@@ -29,6 +29,7 @@ namespace GraphicsLab3
       bool isCtrlDown = false;
 
       bool isOrthographic = false;
+      bool doDrawGrid = false;
 
       public Game(int width, int height, string title) :
            base(width, height, GraphicsMode.Default, title)
@@ -102,15 +103,18 @@ namespace GraphicsLab3
          }
 
 
-         //figure.DrawTexture();
+         figure.DrawTexture();
 
-         GL.Color3(1f, 0f, 0f);
-         figure.DrawMesh();
+         //GL.Color3(1f, 0f, 0f);
+         //figure.DrawMesh();
 
-         GL.Color3(1f, 1f, 1f);
-         GL.LineWidth(3f);
-         figure.DrawGrid();
 
+         if (doDrawGrid)
+         {
+            GL.Color3(1f, 1f, 1f);
+            GL.LineWidth(3f);
+            figure.DrawGrid();
+         }
          //Vector3 v0 = new Vector3(0f, 0f, 2f);
          //v0 = RotateAroundY(v0, -cameraYRotation);
 
@@ -144,6 +148,11 @@ namespace GraphicsLab3
             case Key.Keypad5:
             {
                isOrthographic = !isOrthographic;
+               break;
+            }
+            case Key.Z:
+            {
+               doDrawGrid = !doDrawGrid;
                break;
             }
          }
