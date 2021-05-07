@@ -19,6 +19,7 @@ namespace GraphicsLab3
    {
       public Vector3[][] sideVertices;
       public Vector2[][] textureCoords;
+      public Vector3[] normals;
       public Face[] sideFaces;
       public Face[] textureFaces;
       public int polygonBase = 0;
@@ -299,7 +300,7 @@ namespace GraphicsLab3
 
          return res;
       }
-   }
+    }
 
    class Face
    {
