@@ -49,7 +49,5 @@ namespace GraphicsLab3
 
          return res;
       }
-
-
    }
 }

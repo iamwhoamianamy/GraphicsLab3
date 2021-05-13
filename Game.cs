@@ -24,12 +24,17 @@ namespace GraphicsLab3
       float cameraZoom;
       float cameraYRotation;
       float cameraERotation;
-      public int light_sample = 0;
       bool isShiftDown = false;
       bool isCtrlDown = false;
 
       bool isOrthographic = false;
-      bool doDrawGrid = false;
+      bool drawGrid = false;
+      bool drawNomrals = false;
+      bool accountNormals = false;
+      bool accountLightning = false;
+      bool drawTexture = false;
+
+      public string title = "Geometric floppa: ";
 
       public Game(int width, int height, string title) :
            base(width, height, GraphicsMode.Default, title)
@@ -41,30 +46,10 @@ namespace GraphicsLab3
       {
          GL.ClearColor(0.1f, 0.2f, 0.5f, 0.0f);
          GL.Enable(EnableCap.DepthTest);
-            //            GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse,
-            //new float[] { 1f, 0.2f, 0.2f, 1.0f });
-            //            GL.Enable(EnableCap.Lighting);
-            //            GL.Enable(EnableCap.Light0);
-            //            GL.Enable(EnableCap.ColorMaterial);
 
-            GL.Light(LightName.Light0, LightParameter.Position, new float[] { -5f, 10.0f, 10f });
-            GL.Light(LightName.Light0, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-            GL.Light(LightName.Light0, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.Light(LightName.Light0, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.Light(LightName.Light0, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-            GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-            GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-            GL.Enable(EnableCap.Lighting);
-            GL.Enable(EnableCap.Light0);
+         // Use GL.Material to set your object's material parameters.
 
-            // Use GL.Material to set your object's material parameters.
-            GL.Material(MaterialFace.Front, MaterialParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-            GL.Material(MaterialFace.Front, MaterialParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.Material(MaterialFace.Front, MaterialParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-            GL.Material(MaterialFace.Front, MaterialParameter.Emission, new float[] { 0.0f, 0.0f, 0.0f, 1.0f });
-
-            ResetCameraPosition();
+         ResetCameraPosition();
 
          figure = new Figure();
          figure.InitFigure("../../figure.txt");
@@ -72,6 +57,9 @@ namespace GraphicsLab3
          figure.ReadTexture("../../BigFloppa.png");
          figure.BindTexture();
          figure.CalcTextureCoords();
+         figure.CalcNormals();
+
+         //GL.Enable(EnableCap.AutoNormal);
 
          base.OnLoad(e);
       }
@@ -88,68 +76,126 @@ namespace GraphicsLab3
       }
       protected override void OnRenderFrame(FrameEventArgs e)
       {
-         UpdatePhysics();
+         UpdateTitle();
          Render();
 
          base.OnRenderFrame(e);
       }
 
-      private void UpdatePhysics()
+      private void UpdateTitle()
       {
-         //loc += 0.01f;
-         rotation += 0.01f;
+         string newTitle = title;
+
+         if (drawGrid)
+            newTitle += "Grid: On; ";
+         else
+            newTitle += "Grid: Off; ";
+
+         if (drawNomrals)
+            newTitle += "Draw normals: On; ";
+         else
+            newTitle += "Draw normals: Off; ";
+
+         if (accountNormals)
+            newTitle += "Normals: On; ";
+         else
+            newTitle += "Normals: Off; ";
+
+         if (accountLightning)
+            newTitle += "Lightning: On; ";
+         else
+            newTitle += "Lightning: Off; ";
+
+         if (drawTexture)
+            newTitle += "Drawing: Texture; ";
+         else
+            newTitle += "Drawing: Raw color; ";
+
+         Title = newTitle;
       }
 
       private void Render()
       {
          GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-         //if(isOrthographic)
-         //{
-         //   Matrix4 modelview = Matrix4.CreateOrthographicOffCenter(1f, -1f, -1f, 1f, -10f, 10f);
-         //   GL.MatrixMode(MatrixMode.Modelview);
-         //   GL.LoadMatrix(ref modelview);
-         //   GL.Rotate(180, 0, 1f, 0);
-         //   GL.Translate(0, 0, -11);
+         Matrix4 modelview = Matrix4.LookAt(cameraShift + cameraPosition, cameraShift + Vector3.Zero, Vector3.UnitY);
+         GL.MatrixMode(MatrixMode.Modelview);
+         GL.LoadMatrix(ref modelview);
 
-         //   GL.Translate(cameraShift + cameraPosition);
-         //   GL.Scale(0.5f, 0.5f, 0.5f);
 
-         //   //GL.Translate(cameraShift + cameraPosition);
-         //}
-         //else
+         if (accountLightning)
          {
-            Matrix4 modelview = Matrix4.LookAt(cameraShift + cameraPosition, cameraShift + Vector3.Zero, Vector3.UnitY);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadMatrix(ref modelview);
+            GL.Enable(EnableCap.ColorMaterial);
+            GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.Ambient);
+            GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Ambient, new float[] { 0.5f, 0.5f, 0.5f, 1.0f });
+
+            GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.Diffuse);
+            GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Diffuse, new float[] { 0.5f, 0.5f, 0.5f, 1.0f });
+
+            GL.ColorMaterial(MaterialFace.FrontAndBack, ColorMaterialParameter.Specular);
+            GL.Material(MaterialFace.FrontAndBack, MaterialParameter.Specular, new float[] { 0.1f, 0.5f, 0.1f, 1.0f });
+
+            GL.Enable(EnableCap.Lighting);
+            GL.Enable(EnableCap.Light0);
+            AccountLightning();
+         }
+         else
+         {
+            GL.Disable(EnableCap.ColorMaterial);
+            GL.Disable(EnableCap.Lighting);
+            GL.Disable(EnableCap.Light0);
          }
 
-         GL.Enable(EnableCap.Lighting);
-         GL.Enable(EnableCap.Light0);
-
-
-         float[] lightPos = { 2, 0, 1, 1 };
-         float[] material = { 0, 0, 0.9f, 1 };
-
-
-         GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-         GL.Light(LightName.Light0, LightParameter.Position, lightPos);
-
-         GL.Material(MaterialFace.Front, MaterialParameter.AmbientAndDiffuse, material);
-         GL.Enable(EnableCap.ColorMaterial);
-
-         //figure.DrawTexture();
-         GL.Color3(1f, 0f, 0f);
-         figure.DrawMesh();
-
-         if (doDrawGrid)
+         if (drawTexture)
          {
-            GL.Color3(1f, 1f, 1f);
+            if (accountNormals)
+            {
+               figure.DrawTextureWithNormals();
+            }
+            else
+            {
+               figure.DrawTexture();
+            }
+         }
+         else
+         {
+            if (accountNormals)
+            {
+               figure.DrawMeshWithNormals();
+            }
+            else
+            {
+               GL.Normal3(0.0f, 0.0f, 1.0f);
+               figure.DrawMesh();
+            }
+         }
+
+         if (drawGrid)
+         {
+            GL.Disable(EnableCap.ColorMaterial);
+            GL.Disable(EnableCap.Lighting);
+            GL.Disable(EnableCap.Light0);
+
             GL.LineWidth(3f);
+            GL.Color3(1f, 0f, 0f);
             figure.DrawGrid();
+            GL.Color3(1f, 1f, 1f);
          }
 
-         DrawCube(new Vector3(lightPos[0], lightPos[1], lightPos[2]), 0.5f);
+
+         if (drawNomrals)
+         {
+            GL.Disable(EnableCap.ColorMaterial);
+            GL.Disable(EnableCap.Lighting);
+            GL.Disable(EnableCap.Light0);
+
+            GL.LineWidth(2f);
+            GL.Color3(0f, 1f, 0f);
+            figure.DrawNormals();
+            GL.Color3(1f, 1f, 1f);
+         }
+
+         //DrawCube(new Vector3(lightPos[0], lightPos[1], lightPos[2]), 0.5f);
 
          SwapBuffers();
       }
@@ -162,39 +208,44 @@ namespace GraphicsLab3
          if (e.Control)
             isCtrlDown = true;
 
-            switch (e.Key)
+         switch (e.Key)
+         {
+            case Key.Slash:
             {
-                case Key.Slash:
-                    {
-                        ResetCameraPosition();
-                        break;
-                    }
-                case Key.Keypad5:
-                    {
-                        isOrthographic = !isOrthographic;
-                        break;
-                    }
-                case Key.Z:
-                    {
-                        doDrawGrid = !doDrawGrid;
-                        break;
-                    }
-                case Key.L:
-                    {
-                        if (light_sample == 8)
-                        {
-                            light_sample = 0;
-                            Light_Mode();
-                            break;
-                        }
-                        else
-                        {
-                            light_sample++;
-                            Light_Mode();
-                            break;
-                        }
-                    }
+               ResetCameraPosition();
+               break;
             }
+            case Key.Keypad5:
+            {
+               isOrthographic = !isOrthographic;
+               break;
+            }
+            case Key.G:
+            {
+               drawGrid = !drawGrid;
+               break;
+            }
+            case Key.N:
+            {
+               accountNormals = !accountNormals;
+               break;
+            }
+            case Key.D:
+            {
+               drawNomrals = !drawNomrals;
+               break;
+            }
+            case Key.L:
+            {
+               accountLightning = !accountLightning;
+               break;
+            }
+            case Key.T:
+            {
+               drawTexture = !drawTexture;
+               break;
+            }
+         }
 
          base.OnKeyDown(e);
       }
@@ -211,16 +262,16 @@ namespace GraphicsLab3
 
       protected override void OnMouseDown(MouseButtonEventArgs e)
       {
-         switch(e.Button)
+         switch (e.Button)
          {
             case MouseButton.Middle:
             {
-               
+
                break;
             }
             case MouseButton.Right:
             {
-               
+
 
                break;
             }
@@ -236,7 +287,7 @@ namespace GraphicsLab3
 
       protected override void OnMouseMove(MouseMoveEventArgs e)
       {
-         if(isShiftDown)
+         if (isShiftDown)
          {
             if (e.Mouse.IsButtonDown(MouseButton.Left))
             {
@@ -257,7 +308,7 @@ namespace GraphicsLab3
                cameraShift.Z -= v1.Z * e.YDelta * 0.005f;
             }
          }
-         else if(isCtrlDown)
+         else if (isCtrlDown)
          {
             if (e.Mouse.IsButtonDown(MouseButton.Left))
             {
@@ -271,7 +322,7 @@ namespace GraphicsLab3
             cameraERotation -= e.YDelta * 0.01f;
             RecalcCameraPosition();
          }
-         
+
          mouseX = e.X;
          mouseY = e.Y;
 
@@ -302,7 +353,7 @@ namespace GraphicsLab3
 
          base.OnMouseWheel(e);
       }
-      
+
       private void DrawCube(Vector3 center, float width)
       {
          GL.Begin(BeginMode.Quads);
@@ -315,98 +366,17 @@ namespace GraphicsLab3
          GL.End();
       }
 
-        void Light_Mode()
-        {
-            if (light_sample == 1)
-            {
-                GL.Disable(EnableCap.Light0);
-                GL.Light(LightName.Light1, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light1, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light1, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light1, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light1, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light1);
-            }
-            if (light_sample == 2)
-            {
-                GL.Disable(EnableCap.Light1);
-                GL.Light(LightName.Light2, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light2, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light2, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light2, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light2, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light2);
-            }
-            if (light_sample == 3)
-            {
-                GL.Disable(EnableCap.Light2);
-                GL.Light(LightName.Light3, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light3, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light3, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light3, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light3, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light3);
-            }
-            if (light_sample == 4)
-            {
-                GL.Disable(EnableCap.Light3);
-                GL.Light(LightName.Light4, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light4, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light4, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light4, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light4, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light4);
-            }
-            if (light_sample == 5)
-            {
-                GL.Disable(EnableCap.Light4);
-                GL.Light(LightName.Light5, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light5, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light5, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light5, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light5, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light5);
-            }
-            if (light_sample == 6)
-            {
-                GL.Disable(EnableCap.Light5);
-                GL.Light(LightName.Light6, LightParameter.Position, new float[] { -5, 10.0f, -0.5f });
-                GL.Light(LightName.Light6, LightParameter.Ambient, new float[] { 0.3f, 0.3f, 0.3f, 1.0f });
-                GL.Light(LightName.Light6, LightParameter.Diffuse, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light6, LightParameter.Specular, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.Light(LightName.Light6, LightParameter.SpotExponent, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelAmbient, new float[] { 0.2f, 0.2f, 0.2f, 1.0f });
-                GL.LightModel(LightModelParameter.LightModelTwoSide, 1);
-                GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
-                GL.Enable(EnableCap.Lighting);
-                GL.Enable(EnableCap.Light6);
-            }
+      void AccountLightning()
+      {
+         GL.Light(LightName.Light0, LightParameter.Position, new float[] { -3.0f, 3.0f, 0.5f });
+         GL.Light(LightName.Light0, LightParameter.Ambient, new float[] { 0.5f, 0.2f, 0.2f, 1.0f });
+         GL.Light(LightName.Light0, LightParameter.Diffuse, new float[] { 0.1f, 0.1f, 0.5f, 1.0f });
+         GL.Light(LightName.Light0, LightParameter.Specular, new float[] { 0.1f, 0.1f, 0.1f, 1.0f });
 
-            if (light_sample == 7)
-            {
-                GL.Disable(EnableCap.Light6);
-                GL.Disable(EnableCap.Lighting);
-            }
-        }
-    }
+         GL.LightModel(LightModelParameter.LightModelTwoSide, 0);
+         GL.LightModel(LightModelParameter.LightModelLocalViewer, 1);
+      }
+
+      
+   }
 }

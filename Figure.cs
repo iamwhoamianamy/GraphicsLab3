@@ -148,6 +148,21 @@ namespace GraphicsLab3
          GL.End();
       }
 
+      public void DrawMeshWithNormals()
+      {
+         GL.Begin(BeginMode.Triangles);
+
+         for (int i = 0; i < sideFaces.Length; i++)
+         {
+            GL.Normal3(sideFaces[i].normal);
+            GL.Vertex3(sideVertices[sideFaces[i].v0.Item1][sideFaces[i].v0.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1.Item1][sideFaces[i].v1.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2.Item1][sideFaces[i].v2.Item2]);
+         }
+
+         GL.End();
+      }
+
       public void DrawGrid()
       {
          GL.Begin(BeginMode.Lines);
@@ -261,26 +276,76 @@ namespace GraphicsLab3
 
          GL.End();
          GL.Disable(EnableCap.Texture2D);
+      }
 
-         //GL.Begin(BeginMode.Triangles);
+      public void DrawTextureWithNormals()
+      {
+         GL.BindTexture(TextureTarget.Texture2D, textureID);
 
-         //for (int i = 0; i < faces.Length; i++)
-         //{
-         //   GL.TexCoord2(0, 0);
-         //   GL.Vertex3(vertices[faces[i].v0]);
-         //   GL.TexCoord2(0, 1);
-         //   GL.Vertex3(vertices[faces[i].v1]);
-         //   GL.TexCoord2(1, 0);
-         //   GL.Vertex3(vertices[faces[i].v2]);
-         //}
+         GL.Enable(EnableCap.Texture2D);
+         GL.Begin(BeginMode.Triangles);
 
-         //GL.End();
-         //GL.Disable(EnableCap.Texture2D);
+         for (int i = 0; i < sideFaces.Length; i++)
+         {
+            GL.Normal3(sideFaces[i].normal);
+
+            GL.TexCoord2(textureCoords[textureFaces[i].v0.Item1][textureFaces[i].v0.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v0.Item1][sideFaces[i].v0.Item2]);
+
+            GL.TexCoord2(textureCoords[textureFaces[i].v1.Item1][textureFaces[i].v1.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1.Item1][sideFaces[i].v1.Item2]);
+
+            GL.TexCoord2(textureCoords[textureFaces[i].v2.Item1][textureFaces[i].v2.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2.Item1][sideFaces[i].v2.Item2]);
+         }
+
+         GL.End();
+         GL.Disable(EnableCap.Texture2D);
       }
 
       public void ReadTexture(string fileName)
       {
          bitmap = new Bitmap(fileName);
+      }
+
+      public void CalcNormals()
+      {
+         for (int i = 0; i < sideFaces.Length; i++)
+         {
+            Vector3 v0 = sideVertices[sideFaces[i].v0.Item1][sideFaces[i].v0.Item2];
+            Vector3 v1 = sideVertices[sideFaces[i].v1.Item1][sideFaces[i].v1.Item2];
+            Vector3 v2 = sideVertices[sideFaces[i].v2.Item1][sideFaces[i].v2.Item2];
+
+            Vector3 u = v0 - v1;
+            Vector3 v = v0 - v2;
+
+            Vector3 normal = new Vector3(
+               u.Y * v.Z - u.Z * v.Y,
+               u.Z * v.X - u.X * v.Z,
+               u.X * v.Y - u.Y * v.X
+               );
+
+            sideFaces[i].normal = -1 * normal.Normalized();
+         }
+      }
+
+      public void DrawNormals()
+      {
+         GL.Begin(BeginMode.Lines);
+
+         for (int i = 0; i < sideFaces.Length; i++)
+         {
+            GL.Vertex3(sideVertices[sideFaces[i].v0.Item1][sideFaces[i].v0.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v0.Item1][sideFaces[i].v0.Item2] + sideFaces[i].normal);
+
+            GL.Vertex3(sideVertices[sideFaces[i].v1.Item1][sideFaces[i].v1.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v1.Item1][sideFaces[i].v1.Item2] + sideFaces[i].normal);
+
+            GL.Vertex3(sideVertices[sideFaces[i].v2.Item1][sideFaces[i].v2.Item2]);
+            GL.Vertex3(sideVertices[sideFaces[i].v2.Item1][sideFaces[i].v2.Item2] + sideFaces[i].normal);
+         }
+
+         GL.End();
       }
 
       public Vector3[] CreatePolygon(Vector3 pos, float radius, int polygonBase)
@@ -307,12 +372,15 @@ namespace GraphicsLab3
       public Tuple<int, int> v0;
       public Tuple<int, int> v1;
       public Tuple<int, int> v2;
+      public Vector3 normal;
 
       public Face(Tuple<int, int> v0, Tuple<int, int> v1, Tuple<int, int> v2)
       {
          this.v0 = v0;
          this.v1 = v1;
          this.v2 = v2;
+
+         normal = Vector3.Zero;
       }
    }
 }
